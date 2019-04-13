@@ -23,7 +23,13 @@ pip install -r requirements.txt
 Submission Portal: https://ucp.unicen.smu.edu.sg/gv/students/evaluate/
 
 ## Work-in-Progress
-- [ ] Web application
+Web Application
+- [ ] Client-side validation
+- [ ] Change tab
+- [ ] Unzip and load csv files
+- [ ] Output solution based on data in csv format
+- [ ] Display incidences and base stations on map
+- [ ] Deploy to cloud
 
 ## Acknowledgements
 Team: Patrick Lim, Jane Seah, Koh Zhi Rong, Tan Kim Chye, and Sim Li Jin
