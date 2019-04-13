@@ -92,7 +92,7 @@ def find_min_bases(adj_matrix):
     
     return bases
 
-def load_data(DATA_DIR, grids, regions, day):
+def load_data(DATA_DIR, grids, regions, distances, day):
     # Read from CSV file
     filename = os.path.join(DATA_DIR, 'full_sample_%d_for_students.csv' % day)
     df = pd.read_csv(filename, index_col='id')
@@ -127,16 +127,16 @@ def load_data(DATA_DIR, grids, regions, day):
 
     return df
 
-def load_dataset(DATA_DIR, DATA_FILES, day=None):
+def load_dataset(DATA_DIR, DATA_FILES, grids, regions, distances, day=None):
     if day != None:
         # print("single day")
-        return load_data(DATA_DIR, grids, regions, day)
+        return load_data(DATA_DIR, grids, regions, distances, day)
 
     df = pd.DataFrame()
     i = 0
     weekday = -1
     for i in range(len(DATA_FILES)): # 90 days of data
-        day_df = load_data(DATA_DIR,  grids, regions, i)
+        day_df = load_data(DATA_DIR, grids, regions, distances, i)
         day_df['day'] = i
 
         weekday += 1
@@ -325,10 +325,10 @@ if __name__ == "__main__":
     try:
         day = int(day)
         print("Loading day %d data..." % day)
-        df = load_dataset(DATA_DIR, DATA_FILES, day) # Load specific day
+        df = load_dataset(DATA_DIR, DATA_FILES, grids, regions, distances, day) # Load specific day
     except ValueError:
         print("Loading all incidences...")
-        df = load_dataset(DATA_DIR, DATA_FILES) # Load all data
+        df = load_dataset(DATA_DIR, DATA_FILES, grids, regions, distances) # Load all data
         day = sys.argv[3]
         print("Getting incidences for %s day..." % day)
         if day == "worst":

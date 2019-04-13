@@ -1,7 +1,13 @@
 import os
+import time
 import zipfile
+
+import pandas as pd
+
 from flask import Flask, request, redirect, url_for, flash, render_template
 from werkzeug.utils import secure_filename
+
+import solve
 
 UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__))
 ALLOWED_EXTENSIONS = set(['zip'])
@@ -27,6 +33,7 @@ def upload_file():
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
+
         file = request.files['file']
         # if user does not select file, browser also
         # submit a empty part without filename
@@ -39,9 +46,52 @@ def upload_file():
             zip_ref = zipfile.ZipFile(os.path.join(UPLOAD_FOLDER, filename), 'r')
             zip_ref.extractall(UPLOAD_FOLDER)
             zip_ref.close()
-            return redirect(url_for('upload_file',
-                                    filename=filename))
+            
+            if 'numCars' not in request.form:
+                optimize(UPLOAD_FOLDER, request.form['radius']) # Need validation that radius exists
+            else:
+                optimize(UPLOAD_FOLDER, request.form['radius'], request.form['numCars']) # TODO: Form input for number of cars
+            # return redirect(url_for('upload_file', filename=filename))
     return render_template('index.html')
+
+
+def optimize(data_dir, radius, num_cars=15):
+    t0 = time.time()
+
+    data_files = os.listdir(data_dir)
+    print("Loading grid specs...")
+    grids = pd.read_csv('grid_spec.csv')
+    print("Loading distance matrix...")
+    # distances = compute_distances()
+    distances = pd.read_csv('distances.csv')
+
+    print("Computing adjacency matrix...")
+    adj_mat = solve.compute_adj_mat(distances, radius)
+
+    print("Solving minimum bases required...")
+    base_list = solve.find_min_bases(adj_mat)
+
+    print("Calculating grids covered by each base...")
+    regions = {}
+    for i in base_list:
+        regions[i] = adj_mat[i-1]
+
+    print("Loading data...")
+    df = solve.load_dataset(data_dir, data_files, grids, regions, distances) # Load all data
+    worst_days = solve.find_worst_day_by_grid(df, grids)
+    wd_incidences = solve.get_worst_day_incidences(df, grids, worst_days)
+    mode = wd_incidences.day.mode().values[0]
+    df = df[df.day==mode]
+
+    print("Finding overlaps in incidence times...")
+    clashes = solve.find_clashes(df)
+
+    print("Solving...")
+    solve.allocate(df.spf_base, clashes, num_cars)
+
+    print("Time taken:", time.time() - t0)
+
+    # return redirect(url_for('upload_file', filename=filename))
 
 
 if __name__ == "__main__":
