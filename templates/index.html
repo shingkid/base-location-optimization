@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>Base Station Location Optimizer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+    crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+    integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+    crossorigin=""></script>
+  <style>
+    #mapid {
+      height: 512px;
+      width: 1080px;
+    }
+  </style>
+</head>
+
+<body>
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title">
+          Optimized Locations for Base Stations
+        </h1>
+        <h2 class="subtitle">
+          IS421
+        </h2>
+        <form method="POST" enctype="multipart/form-data">
+          <div class="columns">
+            <div class="column">
+              <div class="file has-name is-fullwidth">
+                <label class="file-label">
+                  <input class="file-input" type="file" name="data_dir">
+                  <span class="file-cta">
+                    <span class="file-icon">
+                      <i class="fas fa-upload"></i>
+                    </span>
+                    <span class="file-label">
+                      Choose an incidence data folder
+                    </span>
+                  </span>
+                  <span class="file-name">
+                    Screen Shot 2017-07-29 at 15.54.25.png
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="column">
+              <input class="input" type="text" placeholder="Radius" name="radius">
+            </div>
+            <div class="column">
+              <input class="button" type="submit" value="Allocate" />
+            </div>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <section>
+
+    <div class="container is-fluid">
+      <div class="tabs">
+        <ul>
+          <li class="is-active"><a>Map</a></li>
+          <li><a>Allocation</a></li>
+        </ul>
+      </div>
+      <div class="card" id="mapid"></div>
+    </div>
+  </section>
+  <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+        <p>
+          <strong>Bulma</strong> by <a href="https://jgthms.com">Jeremy Thomas</a>. The source code is licensed
+          <a href="http://opensource.org/licenses/mit-license.php">MIT</a>. The website content
+          is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>.
+        </p>
+      </div>
+    </div>
+  </footer>
+  <script src="/static/index.js" charset="utf-8"></script>
+</body>
+
+</html>
