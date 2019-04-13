@@ -1,0 +1,15 @@
+certifi==2019.3.9
+chardet==3.0.4
+cplex==12.8.0.1
+docloud==1.0.369
+docplex==2.9.141
+idna==2.8
+numpy==1.16.2
+pandas==0.24.2
+pprint==0.1
+python-dateutil==2.8.0
+pytz==2019.1
+requests==2.21.0
+six==1.12.0
+tqdm==4.31.1
+urllib3==1.24.1
