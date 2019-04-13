@@ -1,5 +1,6 @@
 import csv
 import json
+from math import radians, cos, sin, asin, sqrt
 import os
 from pprint import pprint
 import sys
@@ -15,7 +16,37 @@ from tqdm import tqdm
 
 from docplex.mp.model import Model
 
-def compute_adj_mat(radius):
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    r = 6371 # Radius of earth in kilometers. Use 3956 for miles
+    return c * r
+
+def compute_distances():
+    locations = pd.read_csv('grid_spec_for_students.csv', index_col='Grid_ID')
+    loc_arr = locations.values
+    distances = pd.DataFrame()
+    for i in range(len(loc_arr)):
+        lon1 = loc_arr[i][0]
+        lat1 = loc_arr[i][1]
+        for j in range(len(loc_arr)):
+            lon2 = loc_arr[j][0]
+            lat2 = loc_arr[j][1]
+            distances.at[i,j]  = haversine(lon1, lat1, lon2, lat2)
+    
+    return distances
+
+def compute_adj_mat(distances, radius):
     adj_matrix = []
     for index, row in distances.iterrows():
         can_reach = [int(x) for x in list(np.where(row<=radius)[0])]
@@ -61,7 +92,7 @@ def find_min_bases(adj_matrix):
     
     return bases
 
-def load_data(day):
+def load_data(DATA_DIR, grids, regions, day):
     # Read from CSV file
     filename = os.path.join(DATA_DIR, 'full_sample_%d_for_students.csv' % day)
     df = pd.read_csv(filename, index_col='id')
@@ -96,16 +127,16 @@ def load_data(day):
 
     return df
 
-def load_dataset(day=None):
+def load_dataset(DATA_DIR, DATA_FILES, day=None):
     if day != None:
         # print("single day")
-        return load_data(day)
+        return load_data(DATA_DIR, grids, regions, day)
 
     df = pd.DataFrame()
     i = 0
     weekday = -1
     for i in range(len(DATA_FILES)): # 90 days of data
-        day_df = load_data(i)
+        day_df = load_data(DATA_DIR,  grids, regions, i)
         day_df['day'] = i
 
         weekday += 1
@@ -119,7 +150,7 @@ def load_dataset(day=None):
 
     return df
 
-def find_worst_day_by_grid(df):
+def find_worst_day_by_grid(df, grids):
     worst_days = []
     for i in grids.Grid_ID:
         df_grid = df[df.Grid_ID==i]
@@ -133,7 +164,7 @@ def find_worst_day_by_grid(df):
         worst_days.append({"day": worst_day, "total_cars": worst})
     return worst_days
 
-def get_worst_day_incidences(df, worst_days):
+def get_worst_day_incidences(df, grids, worst_days):
     incidences = pd.DataFrame()
     
     for i in grids.Grid_ID:
@@ -149,7 +180,8 @@ def get_worst_day_incidences(df, worst_days):
     # incidences.to_csv("worst_day.csv", index=False)
     return incidences
 
-def find_average_incidences_by_grid(df):
+def find_average_incidences_by_grid(df, grids):
+    random_state = 6
     incidences = pd.DataFrame()
 
     for i in grids.Grid_ID:
@@ -181,11 +213,11 @@ def find_clashes(incidences):
     
     return clashes
 
-def allocate(assigned_bases, clashes):
+def allocate(assigned_bases, clashes, num_cars=15):
     mdl = Model()
 
     I = len(assigned_bases.index) #number of tasks
-    J = 15 #number of cars
+    J = num_cars #number of cars
     # K =  6 #number of base stations
 
     # Decision variables
@@ -267,19 +299,16 @@ if __name__ == "__main__":
 
     DATA_DIR = sys.argv[1]
     DATA_FILES = os.listdir(DATA_DIR)
-    GRIDS_PATH = 'grid_spec.csv'
-
     radius = float(sys.argv[2])
 
-    random_state = 6
-
     print("Loading grid specs...")
-    grids = pd.read_csv(GRIDS_PATH)
+    grids = pd.read_csv('grid_spec.csv')
     print("Loading distance matrix...")
+    # distances = compute_distances()
     distances = pd.read_csv('distances.csv')
 
     print("Computing adjacency matrix...")
-    adj_mat = compute_adj_mat(radius)
+    adj_mat = compute_adj_mat(distances, radius)
 
     print("Solving minimum bases required...")
     base_list = find_min_bases(adj_mat)
@@ -296,18 +325,18 @@ if __name__ == "__main__":
     try:
         day = int(day)
         print("Loading day %d data..." % day)
-        df = load_dataset(day) # Load specific day
+        df = load_dataset(DATA_DIR, DATA_FILES, day) # Load specific day
     except ValueError:
         print("Loading all incidences...")
-        df = load_dataset() # Load all data
+        df = load_dataset(DATA_DIR, DATA_FILES) # Load all data
         day = sys.argv[3]
         print("Getting incidences for %s day..." % day)
         if day == "worst":
-            worst_days = find_worst_day_by_grid(df)
+            worst_days = find_worst_day_by_grid(df, grids)
             # print(worst_days)
-            df = get_worst_day_incidences(df, worst_days)
+            df = get_worst_day_incidences(df, grids, worst_days)
         elif day == "average":
-            df = find_average_incidences_by_grid(df)
+            df = find_average_incidences_by_grid(df, grids)
 
     # print(df)
 
@@ -316,6 +345,10 @@ if __name__ == "__main__":
     # print(clashes)
 
     print("Solving...")
-    allocate(df.spf_base, clashes)
+    if nargs == 5:
+        num_cars = int(sys.argv[4])
+        allocate(df.spf_base, clashes, num_cars)
+    else:
+        allocate(df.spf_base, clashes)
 
     print("Time taken:", time.time() - t0)
