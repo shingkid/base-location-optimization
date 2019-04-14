@@ -213,7 +213,7 @@ def find_clashes(incidences):
     
     return clashes
 
-def allocate(assigned_bases, clashes, num_cars=15):
+def allocate(assigned_bases, clashes, num_cars=15, outfile='sol.csv'):
     mdl = Model()
 
     I = len(assigned_bases.index) #number of tasks
@@ -267,7 +267,7 @@ def allocate(assigned_bases, clashes, num_cars=15):
         print('obj_val = %d' % mdl.objective_value)
         for i in range(I):
             for j in range(J):
-                print('x[%d,%d] = %d' % (i, j, x_ij[i, j].solution_value))
+                # print('x[%d,%d] = %d' % (i, j, x_ij[i, j].solution_value))
                 if x_ij[i, j].solution_value == 1:
                     base = int(assigned_bases.iloc[i])
                     if base in hash:
@@ -275,18 +275,21 @@ def allocate(assigned_bases, clashes, num_cars=15):
                     else:
                         hash[base] = {j, }
         
-        
         # Write to file
-        with open('sol.csv', 'w') as out:
+        with open(outfile, 'w') as out:
             row1 = "lng" + "," + "lat" + "," + "frc_supply\n"
             out.write(row1)
             for key, v in hash.items():
                 row = str(grids.iloc[key-1, 1]) + "," + str(grids.iloc[key-1, 2]) + "," + str(len(v)) + "\n"
                 out.write(row)
 
+        return hash
+
     except:
         print('Model not solved :(')
         print(mdl.get_solve_details())
+
+        return None
 
 if __name__ == "__main__":
     nargs = len(sys.argv)
