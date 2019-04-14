@@ -46,21 +46,20 @@
             <div class="column">
               <div class="file has-name is-fullwidth">
                 <label class="file-label">
-                  <input class="file-input" type="file" name="data_dir">
+                  <input class="file-input" type="file" name="zip_file" required>
                   <span class="file-cta">
-                    <span class="file-icon">
-                      <i class="fas fa-upload"></i>
-                    </span>
-                    <span class="file-label">
-                      Choose an incidence data folder
-                    </span>
+                    <span class="file-icon"><i class="fas fa-upload"></i></span>
+                    <span class="file-label">Choose an incidence data folder</span>
                   </span>
                   <span class="file-name">No selected file</span>
                 </label>
               </div>
             </div>
             <div class="column">
-              <input class="input" type="text" placeholder="Radius" name="radius">
+              <input class="input" type="text" placeholder="Radius" name="radius" required>
+            </div>
+            <div class="column">
+              <input class="input" type="text" placeholder="Available cars" name="num_cars" min="1" max="25">
             </div>
             <div class="column">
               <input class="button" type="submit" value="Allocate" />
@@ -72,7 +71,6 @@
   </section>
 
   <section>
-
     <div class="container is-fluid">
       <div class="tabs">
         <ul>
