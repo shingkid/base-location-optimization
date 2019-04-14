@@ -3,6 +3,7 @@ eads/
 test_high/
 test_normal/
 train/
+io/
 
 ### Flask ###
 instance/*
