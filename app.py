@@ -56,7 +56,7 @@ def upload_file():
             outfile = os.path.join(UPLOAD_FOLDER, 'sol.csv')
             if num_cars == '':
                 num_cars = 15
-            optimize(DATA_DIR, radius, int(num_cars), outfile) # TODO: Form input for number of cars
+            optimize(DATA_DIR, radius, int(num_cars), outfile)
                 
     return render_template('index.html')
 
@@ -93,11 +93,11 @@ def optimize(data_dir, radius, num_cars, outfile):
     clashes = solve.find_clashes(df)
 
     print("Solving...")
-    solution = solve.allocate(df.spf_base, clashes, num_cars, outfile)
+    allocation = solve.allocate(df.spf_base, clashes, num_cars, outfile)
 
     print("Time taken:", time.time() - t0)
 
-    plot_map(solution)
+    plot_map(grids, allocation)
 
     return redirect(url_for('allocation_file', filename=outfile))
 
@@ -108,8 +108,13 @@ def allocation_file(filename):
                                filename)
 
 
-def plot_map(solution):
-    print(solution)
+def plot_map():
+    grids = pd.read_csv('grid_spec.csv')
+    allocation = pd.read_csv('io/sol.csv')
+
+    print(allocation)
+
+plot_map()
 
 
 if __name__ == "__main__":
