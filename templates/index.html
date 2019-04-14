@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
     integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <!-- <link rel="stylesheet" href="/static/bulma-slider.min.css">
+  <script src="/static/bulma-slider.min.js"></script> -->
   <script src="https://code.jquery.com/jquery-3.4.0.min.js"
     integrity="sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg=" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
@@ -44,25 +46,28 @@
         <form method="POST" enctype="multipart/form-data">
           <div class="columns">
             <div class="column">
-              <div class="file has-name is-fullwidth">
+              <div class="file has-name is-fullwidth is-right">
                 <label class="file-label">
                   <input class="file-input" type="file" name="zip_file" required>
                   <span class="file-cta">
                     <span class="file-icon"><i class="fas fa-upload"></i></span>
-                    <span class="file-label">Choose an incidence data folder</span>
+                    <span class="file-label">Choose a folder</span>
                   </span>
                   <span class="file-name">No selected file</span>
                 </label>
               </div>
+              <span>Incidence data</span>
             </div>
             <div class="column">
-              <input class="input" type="text" placeholder="Radius" name="radius" required>
+              <input class="input" type="text" placeholder="2.5" name="radius" required>
+              <span>Radius (km)</span>
             </div>
             <div class="column">
-              <input class="input" type="text" placeholder="Available cars" name="num_cars" min="1" max="25">
+              <input class="input" type="text" placeholder="15" name="num_cars">
+              <span>Available cars</span>
             </div>
             <div class="column">
-              <input class="button" type="submit" value="Allocate" />
+              <input class="button" type="submit" value="Optimize" />
             </div>
           </div>
         </form>
