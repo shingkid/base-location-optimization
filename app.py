@@ -107,15 +107,5 @@ def allocation_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
 
-
-def plot_map():
-    grids = pd.read_csv('grid_spec.csv')
-    allocation = pd.read_csv('io/sol.csv')
-
-    print(allocation)
-
-plot_map()
-
-
 if __name__ == "__main__":
     app.run(debug=True)
