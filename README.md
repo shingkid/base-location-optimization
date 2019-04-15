@@ -30,9 +30,9 @@ Submission Portal: https://ucp.unicen.smu.edu.sg/gv/students/evaluate/
 
 ## Work-in-Progress
 Web Application
-- [ ] Client-side validation for zip file, radius, and number of cars
+- [x] Client-side validation for zip file, radius, and number of cars
 - [ ] Change tab
-- [ ] Unzip and load csv files
+- [x] Unzip and load csv files
 - [ ] Output solution based on data in csv format
 - [ ] Display incidences and base stations on map
 - [ ] Deploy to cloud
