@@ -4,7 +4,8 @@ import zipfile
 
 import pandas as pd
 
-from flask import Flask, request, redirect, url_for, flash, render_template, send_from_directory
+from flask import Flask, request, redirect, url_for, flash, render_template, send_from_directory, jsonify, make_response
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 import solve
@@ -16,6 +17,7 @@ ALLOWED_EXTENSIONS = set(['zip'])
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = ''
+CORS(app)
 
 
 def allowed_file(filename):
@@ -83,7 +85,7 @@ def optimize(data_dir, radius, num_cars, outfile):
         regions[i] = adj_mat[i-1]
 
     print("Loading data...")
-    df = solve.load_dataset(data_dir, data_files, grids, regions, distances) # Load all data
+    df = solve.load_dataset(data_dir, len(data_files), grids, regions, distances) # Load all data
     worst_days = solve.find_worst_day_by_grid(df, grids)
     wd_incidences = solve.get_worst_day_incidences(df, grids, worst_days)
     mode = wd_incidences.day.mode().values[0]
@@ -93,19 +95,37 @@ def optimize(data_dir, radius, num_cars, outfile):
     clashes = solve.find_clashes(df)
 
     print("Solving...")
-    allocation = solve.allocate(df.spf_base, clashes, num_cars, outfile)
+    allocation = solve.allocate(grids, df.spf_base, clashes, num_cars, outfile)
 
     print("Time taken:", time.time() - t0)
 
-    plot_map(grids, allocation)
-
     return redirect(url_for('allocation_file', filename=outfile))
+
+
+@app.route('/solution', methods=['GET'])
+def plot_map():
+    allocation = pd.read_csv(os.path.join(UPLOAD_FOLDER, 'sol.csv'))
+    data = []
+    for index, row in allocation.iterrows():
+        base = {
+            'lat': row.lat,
+            'lng': row.lng,
+            'frc_supply': row.frc_supply
+        }
+        data.append(base)
+    return jsonify(data)
 
 
 @app.route('/solution/<filename>')
 def allocation_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
+                    
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

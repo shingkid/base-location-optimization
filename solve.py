@@ -127,7 +127,7 @@ def load_data(DATA_DIR, grids, regions, distances, day):
 
     return df
 
-def load_dataset(DATA_DIR, DATA_FILES, grids, regions, distances, day=None):
+def load_dataset(DATA_DIR, num_days, grids, regions, distances, day=None):
     if day != None:
         # print("single day")
         return load_data(DATA_DIR, grids, regions, distances, day)
@@ -135,7 +135,7 @@ def load_dataset(DATA_DIR, DATA_FILES, grids, regions, distances, day=None):
     df = pd.DataFrame()
     i = 0
     weekday = -1
-    for i in range(len(DATA_FILES)): # 90 days of data
+    for i in range(num_days): # 90 days of data
         day_df = load_data(DATA_DIR, grids, regions, distances, i)
         day_df['day'] = i
 
@@ -180,13 +180,13 @@ def get_worst_day_incidences(df, grids, worst_days):
     # incidences.to_csv("worst_day.csv", index=False)
     return incidences
 
-def find_average_incidences_by_grid(df, grids):
+def find_average_incidences_by_grid(num_days, df, grids):
     random_state = 6
     incidences = pd.DataFrame()
 
     for i in grids.Grid_ID:
         grid_incidences = df[df.Grid_ID == i]
-        avg = round(len(grid_incidences) / len(DATA_FILES))
+        avg = round(len(grid_incidences) / num_days)
         print(avg)
         sample = grid_incidences.sample(n=avg, random_state=random_state)
         print(len(sample))
@@ -213,7 +213,7 @@ def find_clashes(incidences):
     
     return clashes
 
-def allocate(assigned_bases, clashes, num_cars=15, outfile='sol.csv'):
+def allocate(grids, assigned_bases, clashes, num_cars=15, outfile='sol.csv'):
     mdl = Model()
 
     I = len(assigned_bases.index) #number of tasks
@@ -302,6 +302,7 @@ if __name__ == "__main__":
 
     DATA_DIR = sys.argv[1]
     DATA_FILES = os.listdir(DATA_DIR)
+    NUM_FILES = len(DATA_FILES)
     radius = float(sys.argv[2])
 
     print("Loading grid specs...")
@@ -328,10 +329,10 @@ if __name__ == "__main__":
     try:
         day = int(day)
         print("Loading day %d data..." % day)
-        df = load_dataset(DATA_DIR, DATA_FILES, grids, regions, distances, day) # Load specific day
+        df = load_dataset(DATA_DIR, NUM_FILES, grids, regions, distances, day) # Load specific day
     except ValueError:
         print("Loading all incidences...")
-        df = load_dataset(DATA_DIR, DATA_FILES, grids, regions, distances) # Load all data
+        df = load_dataset(DATA_DIR, NUM_FILES, grids, regions, distances) # Load all data
         day = sys.argv[3]
         print("Getting incidences for %s day..." % day)
         if day == "worst":
@@ -339,7 +340,7 @@ if __name__ == "__main__":
             # print(worst_days)
             df = get_worst_day_incidences(df, grids, worst_days)
         elif day == "average":
-            df = find_average_incidences_by_grid(df, grids)
+            df = find_average_incidences_by_grid(NUM_FILES, df, grids)
 
     # print(df)
 
@@ -350,8 +351,8 @@ if __name__ == "__main__":
     print("Solving...")
     if nargs == 5:
         num_cars = int(sys.argv[4])
-        allocate(df.spf_base, clashes, num_cars)
+        allocate(grids, df.spf_base, clashes, num_cars)
     else:
-        allocate(df.spf_base, clashes)
+        allocate(grids, df.spf_base, clashes)
 
     print("Time taken:", time.time() - t0)
