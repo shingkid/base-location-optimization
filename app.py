@@ -4,7 +4,7 @@ import zipfile
 
 import pandas as pd
 
-from flask import Flask, request, redirect, url_for, flash, render_template, send_from_directory, jsonify, make_response
+from flask import Flask, request, redirect, url_for, flash, render_template, send_file, jsonify, make_response
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
@@ -118,8 +118,7 @@ def plot_map():
 
 @app.route('/solution/<filename>')
 def allocation_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename)
+    return send_file('io/' + filename, as_attachment=True)
                     
 
 @app.errorhandler(404)
