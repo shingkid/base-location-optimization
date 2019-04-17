@@ -74,18 +74,33 @@
       </div>
     </div>
   </section>
-
+  
   <section>
-    <div class="container is-fluid">
-      <div class="tabs">
-        <ul>
-          <li class="is-active"><a>Map</a></li>
-          <li><a>Allocation</a></li>
-        </ul>
-      </div>
-      <div class="card" id="mapid"></div>
+    <div class="container tabs" id="tabs">
+      <ul>
+        <li class="is-active" data-tab="1">
+          <a>
+            Map
+          </a>
+        </li>
+        <li data-tab="2">
+          <a>
+            Allocation
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div id="tab-content">
+      <p class = "container is-active" data-content="1" id="mapid">
+      </p>
+      <p class="container" data-content="2">
+        Text goes here
+      </p>
     </div>
   </section>
+
+
   <footer class="footer">
     <div class="container">
       <div class="content has-text-centered">
@@ -98,6 +113,7 @@
     </div>
   </footer>
   <script src="/static/index.js" charset="utf-8"></script>
+  <script src="/static/tab.js" charset="utf-8"></script>
 </body>
 
 </html>
