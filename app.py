@@ -60,7 +60,8 @@ def upload_file():
                 num_cars = 15
             optimize(DATA_DIR, radius, int(num_cars), outfile)
                 
-    return render_template('index.html')
+    # return render_template('index.html')
+    return redirect(url_for('allocation_file', filename='sol.csv'))
 
 
 def optimize(data_dir, radius, num_cars, outfile):
@@ -99,7 +100,7 @@ def optimize(data_dir, radius, num_cars, outfile):
 
     print("Time taken:", time.time() - t0)
 
-    return redirect(url_for('allocation_file', filename=outfile))
+    return redirect(url_for('allocation_file', filename='sol.csv'))
 
 
 @app.route('/solution', methods=['GET'])
@@ -116,9 +117,12 @@ def plot_map():
     return jsonify(data)
 
 
-@app.route('/solution/<filename>')
+@app.route('/solution/<filename>',)
 def allocation_file(filename):
-    return send_file('io/' + filename, as_attachment=True)
+    try:
+        return send_file('io/' + filename, as_attachment=True)
+    except:
+        return make_response(jsonify({'error': 'Not found'}), 404)
                     
 
 @app.errorhandler(404)
