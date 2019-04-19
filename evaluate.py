@@ -73,7 +73,7 @@ def assign_cars(df, supply):
         # print(supply)
 
     failures = q.qsize()
-    return (len(df)-success)/len(df)
+    return success
 
 
 if __name__ == "__main__":
@@ -91,6 +91,7 @@ if __name__ == "__main__":
         gid = int(grids[grids.long==row.lng][grids.lat==row.lat].Grid_ID.values[0])
         df.at[index, 'Grid_ID'] = gid
 
-    risk = assign_cars(df, supply)
+    success = assign_cars(df, supply)
+    risk = (len(df) - success) / len(df)
 
-    print("Risk: " + str(risk*100) + "%")
+    print("Risk: {0:.2f}%".format(risk * 100))
