@@ -1,16 +1,14 @@
+import sys
+
 # https://docs.python.org/3/library/queue.html
 from queue import Queue
-
-import sys
 
 import numpy as np
 import pandas as pd
 
-import warnings
-warnings.filterwarnings("ignore")
+# import warnings
+# warnings.filterwarnings("ignore")
 
-speed = [12, 20] # km/h
-response_time = [0.5, 0.25] # hr
 
 if len(sys.argv) < 3:
     exit()
@@ -21,21 +19,27 @@ df = pd.read_csv(filename, index_col='id').sort_values(by=['start_time'])
 allocation = pd.read_csv(sol_file)
 grids = pd.read_csv('grid_spec.csv')
 distances = pd.read_csv('distances.csv')
+speed = [12, 20] # km/h
+response_time = [0.5, 0.25] # hr
+
 
 def get_bases_by_distance(location, bases, urgency):
     location -= 1 # distance matrix indexes from 0 while grids index from 1
     nearest = distances.iloc[location, :].sort_values().index
     return [int(i)+1 for i in nearest if int(i)+1 in bases and within_reach(location, int(i), urgency)]
 
+
 def within_reach(a, b, urgency):
     target = speed[urgency] * response_time[urgency]
     return distances.iloc[a-1, b-1] <= target
+
 
 def service_time(base, incident):
     distance = distances.iloc[base-1, int(incident.Grid_ID)-1]
     travel_time = distance / speed[int(incident.is_urgent)]
     return_time = distance / speed[0]
     return travel_time + incident.engagement_time + return_time
+
 
 supply = {int(row.Grid_ID): [0]*int(row.frc_supply) for index, row in allocation.iterrows()}
 
@@ -53,8 +57,7 @@ for i in range(1440):
         # TODO: Attempt to handle those in queue
         for index, row in t.iterrows():
             # Get list of bases in order of distance
-            location = int(row.Grid_ID)
-            nearest_bases = get_bases_by_distance(location, supply.keys(), int(row.is_urgent))
+            nearest_bases = get_bases_by_distance(int(row.Grid_ID), supply.keys(), int(row.is_urgent))
             demand = row.frcs_demand
 
             for b in nearest_bases:
