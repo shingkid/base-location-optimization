@@ -79,5 +79,6 @@ for i in range(1440):
         supply[k] = [max(0, x-1) for x in v]
 
 failures = q.qsize()
-print("Risk (total - success):", (len(df) - success)/len(df))
-print("Risk (failures):", failures/len(df))
+print("Total:", len(df))
+print("Success:", success)
+print("Fail:", failures)
