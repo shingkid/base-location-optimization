@@ -218,21 +218,12 @@ def allocate(grids, assigned_bases, clashes, num_cars=15, outfile='sol.csv'):
 
     I = len(assigned_bases.index) #number of tasks
     J = num_cars #number of cars
-    # K =  6 #number of base stations
 
     # Decision variables
     x_ij = {}
-    # y_jk = {}
-    # z_ik = pd.read_csv('incident_2.csv')
     for i in range(I):
         for j in range(J):
             x_ij[i, j] = mdl.binary_var(name='x[%d,%d]' % (i, j))
-
-    # y_jk = {}
-    # for j in range(I):
-        # for k in range(J):
-            # y_jk[j, k] = mdl.binary_var(name='y[%d,%d]' % (j, k))
-
 
     # Objective function
     obj = mdl.linear_expr()

@@ -1,4 +1,5 @@
 import os
+import os
 import time
 import zipfile
 
@@ -16,7 +17,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 ALLOWED_EXTENSIONS = set(['zip'])
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = ''
+app.config['SECRET_KEY'] = 'aaaa'
 CORS(app)
 
 
@@ -37,7 +38,7 @@ def upload_file():
         if 'zip_file' not in request.files:
             flash('No file part')
             return redirect(request.url)
-
+            # filename = os.path.join(DATA_DIR, 'full_sample_%d_for_students.csv' % day)
         file = request.files['zip_file']
         # if user does not select file, browser also
         # submit a empty part without filename
@@ -53,18 +54,20 @@ def upload_file():
             
             radius = float(request.form['radius'])
             num_cars = request.form['num_cars']
-
+            multi_method = request.form['multi-method']
+            time_varying = request.form.get('time-varying')
+            
             DATA_DIR = os.path.join(UPLOAD_FOLDER, filename[:-4])
             outfile = os.path.join(UPLOAD_FOLDER, 'sol.csv')
             if num_cars == '':
                 num_cars = 15
-            optimize(DATA_DIR, radius, int(num_cars), outfile)
+            optimize(DATA_DIR, radius, int(num_cars), outfile, multi_method, time_varying)
                 
     # return render_template('index.html')
     return redirect(url_for('allocation_file', filename='sol.csv'))
 
 
-def optimize(data_dir, radius, num_cars, outfile):
+def optimize(data_dir, radius, num_cars, outfile, multi_method, time_varying = None):
     t0 = time.time()
 
     data_files = os.listdir(data_dir)
@@ -89,9 +92,12 @@ def optimize(data_dir, radius, num_cars, outfile):
     df = solve.load_dataset(data_dir, len(data_files), grids, regions, distances) # Load all data
     worst_days = solve.find_worst_day_by_grid(df, grids)
     wd_incidences = solve.get_worst_day_incidences(df, grids, worst_days)
-    mode = wd_incidences.day.mode().values[0]
-    df = df[df.day==mode]
-
+    if multi_method == "mode":
+        mode = wd_incidences.day.mode().values[0]
+        df = df[df.day==mode]
+    elif multi_method == "aggregated":
+        df = wd_incidences
+    
     print("Finding overlaps in incidence times...")
     clashes = solve.find_clashes(df)
 
