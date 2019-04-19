@@ -12,13 +12,14 @@ warnings.filterwarnings("ignore")
 speed = [12, 20] # km/h
 response_time = [0.5, 0.25] # hr
 
-if len(sys.argv) < 2:
+if len(sys.argv) < 3:
     exit()
 
 filename = sys.argv[1]
+sol_file = sys.argv[2]
 df = pd.read_csv(filename, index_col='id').sort_values(by=['start_time'])
+allocation = pd.read_csv(sol_file)
 grids = pd.read_csv('grid_spec.csv')
-allocation = pd.read_csv('sol.csv')
 distances = pd.read_csv('distances.csv')
 
 def get_bases_by_distance(location, bases, urgency):
