@@ -266,13 +266,18 @@ def allocate(grids, assigned_bases, clashes, num_cars=15, outfile='sol.csv'):
                     else:
                         hash[base] = {j, }
         
-        # Write to file
-        with open(outfile, 'w') as out:
-            row1 = "lng" + "," + "lat" + "," + "frc_supply\n"
-            out.write(row1)
-            for key, v in hash.items():
-                row = str(grids.iloc[key-1, 1]) + "," + str(grids.iloc[key-1, 2]) + "," + str(len(v)) + "\n"
-                out.write(row)
+        allocation = pd.DataFrame(columns=['lng', 'lat', 'frc_supply', 'Grid_ID'])
+        for k, v in hash.items():
+            g = grids[grids.Grid_ID==k]
+            a = {
+                'lng': g.long.values[0],
+                'lat': g.lat.values[0],
+                'frc_supply': len(v),
+                'Grid_ID': k
+            }
+            allocation = allocation.append(a, ignore_index=True)
+        print(allocation)
+        allocation.to_csv('sol.csv', index=False)
 
         return hash
 
