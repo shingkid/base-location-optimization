@@ -2,6 +2,7 @@ import os
 import os
 import time
 import zipfile
+import re
 
 import pandas as pd
 
@@ -15,6 +16,7 @@ UPLOAD_FOLDER = os.path.join(os.getcwd(), 'io')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 ALLOWED_EXTENSIONS = set(['zip'])
+ALLOWED_EXTENSIONS_2 = set(['csv'])
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aaaa'
@@ -25,7 +27,11 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def allowed_file_2(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_2
 
+           
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -34,18 +40,37 @@ def index():
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
+
         # check if the post request has the file part
         if 'zip_file' not in request.files:
             flash('No file part')
             return redirect(request.url)
-            # filename = os.path.join(DATA_DIR, 'full_sample_%d_for_students.csv' % day)
+            
         file = request.files['zip_file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
+            # if user does not select file, browser also
+            # submit a empty part without filename
         if file.filename == '':
             flash('No selected file')
             return redirect(request.url)
-        if file and allowed_file(file.filename):
+        if file and allowed_file_2(file.filename):
+
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            
+            day = int(re.search(r'\d+', filename).group(0))
+            print(day)
+            
+            radius = float(request.form['radius'])
+            num_cars = request.form['num_cars']
+            time_varying = request.form.get('time-varying')
+            
+            DATA_DIR = UPLOAD_FOLDER
+            outfile = os.path.join(UPLOAD_FOLDER, 'sol.csv')
+            if num_cars == '':
+                num_cars = 15
+            optimize(DATA_DIR, radius, int(num_cars), outfile, time_varying = time_varying, day = day)
+            
+        elif file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(UPLOAD_FOLDER, filename))
             zip_ref = zipfile.ZipFile(os.path.join(UPLOAD_FOLDER, filename), 'r')
@@ -61,13 +86,13 @@ def upload_file():
             outfile = os.path.join(UPLOAD_FOLDER, 'sol.csv')
             if num_cars == '':
                 num_cars = 15
-            optimize(DATA_DIR, radius, int(num_cars), outfile, multi_method, time_varying)
+            optimize(DATA_DIR, radius, int(num_cars), outfile, multi_method = multi_method, time_varying = time_varying)
                 
     # return render_template('index.html')
     return redirect(url_for('allocation_file', filename='sol.csv'))
 
 
-def optimize(data_dir, radius, num_cars, outfile, multi_method, time_varying = None):
+def optimize(data_dir, radius, num_cars, outfile, multi_method = None, time_varying = None, day = None):
     t0 = time.time()
 
     data_files = os.listdir(data_dir)
@@ -89,14 +114,16 @@ def optimize(data_dir, radius, num_cars, outfile, multi_method, time_varying = N
         regions[i] = adj_mat[i-1]
 
     print("Loading data...")
-    df = solve.load_dataset(data_dir, len(data_files), grids, regions, distances) # Load all data
-    worst_days = solve.find_worst_day_by_grid(df, grids)
-    wd_incidences = solve.get_worst_day_incidences(df, grids, worst_days)
-    if multi_method == "mode":
-        mode = wd_incidences.day.mode().values[0]
-        df = df[df.day==mode]
-    elif multi_method == "aggregated":
-        df = wd_incidences
+    df = solve.load_dataset(data_dir, len(data_files), grids, regions, distances, day = day) # Load all data
+    
+    if multi_method != None:
+        worst_days = solve.find_worst_day_by_grid(df, grids)
+        wd_incidences = solve.get_worst_day_incidences(df, grids, worst_days)
+        if multi_method == "mode":
+            mode = wd_incidences.day.mode().values[0]
+            df = df[df.day==mode]
+        elif multi_method == "aggregated":
+            df = wd_incidences
     
     print("Finding overlaps in incidence times...")
     clashes = solve.find_clashes(df)
