@@ -26,17 +26,21 @@ Optional flag to specify number of cars available for deployment
 `python solve.py [data_dir] [radius] [day] [num_cars]`
 
 ### Evaluation
-Submission Portal: https://ucp.unicen.smu.edu.sg/gv/students/evaluate/
+Official Submission Portal: https://ucp.unicen.smu.edu.sg/gv/students/evaluate/
+
+Internal script:
+
+`python evaluate.py [data_file] [solution_file]`
 
 ## Work-in-Progress
 Web Application
 - [x] Client-side validation for zip file, radius, and number of cars
-- [ ] Change tab
+- [x] Change tab
 - [x] Unzip and load csv files
 - [ ] Output solution based on data in csv format
-- [ ] Display incidences and base stations on map
+- [x] Display incidences and base stations on map
 - [ ] Deploy to cloud
-- [ ] Evaluation function (KIV)
+- [ ] Evaluation function
 
 ## Acknowledgements
 Team: Patrick Lim, Jane Seah, Koh Zhi Rong, Tan Kim Chye, and Sim Li Jin
