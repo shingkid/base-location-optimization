@@ -36,8 +36,8 @@ def within_reach(a, b, urgency):
 
 def service_time(base, incident):
     distance = distances.iloc[base-1, int(incident.Grid_ID)-1]
-    travel_time = distance / speed[int(incident.is_urgent)]
-    return_time = distance / speed[0]
+    travel_time = distance / speed[int(incident.is_urgent)] * 60
+    return_time = distance / speed[0] * 60
     return travel_time + incident.engagement_time + return_time
 
 
@@ -80,6 +80,8 @@ for i in range(1440):
     # Decrement from all car times
     for k, v in supply.items():
         supply[k] = [max(0, x-1) for x in v]
+
+    print(supply)
 
 failures = q.qsize()
 print("Total:", len(df))
