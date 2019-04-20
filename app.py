@@ -142,7 +142,7 @@ def optimize(data_dir, radius, num_cars, outfile, multi_method = None, time_vary
             print(clashes)
             outfile = os.path.join(UPLOAD_FOLDER, '%s_sol.csv' % i)
             print("Solving for interval %s..." % i)
-            allocation = solve.allocate(grids, df.spf_base, clashes, num_cars, outfile)
+            allocation = solve.allocate(grids, df[df.window==i].spf_base, clashes, num_cars, outfile)
     else:
         print("Finding overlaps in incidence times...")
         clashes = solve.find_clashes(df)

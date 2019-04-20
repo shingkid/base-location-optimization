@@ -277,7 +277,7 @@ def allocate(grids, assigned_bases, clashes, num_cars=15, outfile='sol.csv'):
             }
             allocation = allocation.append(a, ignore_index=True)
         print(allocation)
-        allocation.to_csv('sol.csv', index=False)
+        allocation.to_csv(outfile, index=False)
 
         return hash
 
