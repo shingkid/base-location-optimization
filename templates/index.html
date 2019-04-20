@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>Base Station Location Optimizer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+  integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <!-- <link rel="stylesheet" href="/static/bulma-slider.min.css">
+    <script src="/static/bulma-slider.min.js"></script> -->
+    <script src="https://code.jquery.com/jquery-3.4.0.min.js"
+    integrity="sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+    crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+    integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+    crossorigin=""></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('input[type="file"]').change(function (e) {
+          var fileName = e.target.files[0].name;
+          $('.file-name').text(fileName);
+        });
+      });
+    </script>
+    <style>
+    #mapid {
+      height: 1080px;
+      width: 1024px;
+    }
+    #tab-content p {
+      display: none;
+    }
+
+    #tab-content p.is-active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title">
+          Optimized Locations for Base Stations
+        </h1>
+        <h2 class="subtitle">
+          IS421
+        </h2>
+        <form method="POST" enctype="multipart/form-data">
+          <div class="columns">
+            <div class="column">
+              <div class="file has-name is-fullwidth is-right">
+                <label class="file-label">
+                  <input class="file-input" type="file" name="zip_file" required>
+                  <span class="file-cta">
+                    <span class="file-icon"><i class="fas fa-upload"></i></span>
+                    <span class="file-label">Choose a file</span>
+                  </span>
+                  <span class="file-name">No selected file</span>
+                </label>
+              </div>
+              <span>Incidence data</span>
+            </div>
+            <div class="column">
+              <input class="input" type="text" placeholder="2.5" name="radius" required>
+              <span>Radius (km)</span>
+            </div>
+            <div class="column">
+              <input class="input" type="text" placeholder="15" name="num_cars">
+              <span>Available cars</span>
+            </div>
+            <div class="column">
+              <span><b>Multiple Dataset Method:</b></span><br>
+              <input type="radio" name="multi-method" value="mode" checked> Mode Worst <br>
+              <input type="radio" name="multi-method" value="aggregated"> Aggregated Worst <br>
+            </div>
+            <div class="column">
+              <span><b>X-Factor:</b></span><br>
+              <input type="checkbox" name="time-varying" value="time-varying" checked> Time-Varying Bases <br>
+            </div>
+            <div class="column">
+              <input class="button" type="submit" value="Optimize" />
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+  
+  <section>
+    <div class="container tabs" id="tabs">
+      <ul>
+        <li class="is-active" data-tab="1">
+          <a>
+            Map
+          </a>
+        </li>
+        <li data-tab="2">
+          <a>
+            Results
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div id="tab-content">
+      
+      <p class = "container is-active" data-content="1" id="mapid">
+      </p>
+      <p class = "container is-active" data-content="2" id="results"><b> Results: </b><br></p>
+    </div>
+  </section>
+
+
+  <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+        <p>
+          <strong>Bulma</strong> by <a href="https://jgthms.com">Jeremy Thomas</a>. The source code is licensed
+          <a href="http://opensource.org/licenses/mit-license.php">MIT</a>. The website content
+          is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>.
+        </p>
+      </div>
+    </div>
+  </footer>
+  <script src="/static/index.js" charset="utf-8"></script>
+  <script src="/static/tab.js" charset="utf-8"></script>
+</body>
+
+</html>

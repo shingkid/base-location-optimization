@@ -1,5 +1,6 @@
 import csv
 import json
+from math import radians, cos, sin, asin, sqrt
 import os
 from pprint import pprint
 import sys
@@ -15,7 +16,37 @@ from tqdm import tqdm
 
 from docplex.mp.model import Model
 
-def compute_adj_mat(radius):
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    r = 6371 # Radius of earth in kilometers. Use 3956 for miles
+    return c * r
+
+def compute_distances():
+    locations = pd.read_csv('grid_spec_for_students.csv', index_col='Grid_ID')
+    loc_arr = locations.values
+    distances = pd.DataFrame()
+    for i in range(len(loc_arr)):
+        lon1 = loc_arr[i][0]
+        lat1 = loc_arr[i][1]
+        for j in range(len(loc_arr)):
+            lon2 = loc_arr[j][0]
+            lat2 = loc_arr[j][1]
+            distances.at[i,j]  = haversine(lon1, lat1, lon2, lat2)
+    
+    return distances
+
+def compute_adj_mat(distances, radius):
     adj_matrix = []
     for index, row in distances.iterrows():
         can_reach = [int(x) for x in list(np.where(row<=radius)[0])]
@@ -61,7 +92,7 @@ def find_min_bases(adj_matrix):
     
     return bases
 
-def load_data(day):
+def load_data(DATA_DIR, grids, regions, distances, day):
     # Read from CSV file
     filename = os.path.join(DATA_DIR, 'full_sample_%d_for_students.csv' % day)
     df = pd.read_csv(filename, index_col='id')
@@ -96,16 +127,16 @@ def load_data(day):
 
     return df
 
-def load_dataset(day=None):
+def load_dataset(DATA_DIR, num_days, grids, regions, distances, day=None):
     if day != None:
         # print("single day")
-        return load_data(day)
+        return load_data(DATA_DIR, grids, regions, distances, day)
 
     df = pd.DataFrame()
     i = 0
     weekday = -1
-    for i in range(len(DATA_FILES)): # 90 days of data
-        day_df = load_data(i)
+    for i in range(num_days): # 90 days of data
+        day_df = load_data(DATA_DIR, grids, regions, distances, i)
         day_df['day'] = i
 
         weekday += 1
@@ -119,7 +150,7 @@ def load_dataset(day=None):
 
     return df
 
-def find_worst_day_by_grid(df):
+def find_worst_day_by_grid(df, grids):
     worst_days = []
     for i in grids.Grid_ID:
         df_grid = df[df.Grid_ID==i]
@@ -133,7 +164,7 @@ def find_worst_day_by_grid(df):
         worst_days.append({"day": worst_day, "total_cars": worst})
     return worst_days
 
-def get_worst_day_incidences(df, worst_days):
+def get_worst_day_incidences(df, grids, worst_days):
     incidences = pd.DataFrame()
     
     for i in grids.Grid_ID:
@@ -149,12 +180,13 @@ def get_worst_day_incidences(df, worst_days):
     # incidences.to_csv("worst_day.csv", index=False)
     return incidences
 
-def find_average_incidences_by_grid(df):
+def find_average_incidences_by_grid(num_days, df, grids):
+    random_state = 6
     incidences = pd.DataFrame()
 
     for i in grids.Grid_ID:
         grid_incidences = df[df.Grid_ID == i]
-        avg = round(len(grid_incidences) / len(DATA_FILES))
+        avg = round(len(grid_incidences) / num_days)
         print(avg)
         sample = grid_incidences.sample(n=avg, random_state=random_state)
         print(len(sample))
@@ -181,26 +213,17 @@ def find_clashes(incidences):
     
     return clashes
 
-def allocate(assigned_bases, clashes):
+def allocate(grids, assigned_bases, clashes, num_cars=15, outfile='sol.csv'):
     mdl = Model()
 
     I = len(assigned_bases.index) #number of tasks
-    J = 15 #number of cars
-    # K =  6 #number of base stations
+    J = num_cars #number of cars
 
     # Decision variables
     x_ij = {}
-    # y_jk = {}
-    # z_ik = pd.read_csv('incident_2.csv')
     for i in range(I):
         for j in range(J):
             x_ij[i, j] = mdl.binary_var(name='x[%d,%d]' % (i, j))
-
-    # y_jk = {}
-    # for j in range(I):
-        # for k in range(J):
-            # y_jk[j, k] = mdl.binary_var(name='y[%d,%d]' % (j, k))
-
 
     # Objective function
     obj = mdl.linear_expr()
@@ -235,7 +258,7 @@ def allocate(assigned_bases, clashes):
         print('obj_val = %d' % mdl.objective_value)
         for i in range(I):
             for j in range(J):
-                print('x[%d,%d] = %d' % (i, j, x_ij[i, j].solution_value))
+                # print('x[%d,%d] = %d' % (i, j, x_ij[i, j].solution_value))
                 if x_ij[i, j].solution_value == 1:
                     base = int(assigned_bases.iloc[i])
                     if base in hash:
@@ -243,18 +266,26 @@ def allocate(assigned_bases, clashes):
                     else:
                         hash[base] = {j, }
         
-        
-        # Write to file
-        with open('sol.csv', 'w') as out:
-            row1 = "lng" + "," + "lat" + "," + "frc_supply\n"
-            out.write(row1)
-            for key, v in hash.items():
-                row = str(grids.iloc[key-1, 1]) + "," + str(grids.iloc[key-1, 2]) + "," + str(len(v)) + "\n"
-                out.write(row)
+        allocation = pd.DataFrame(columns=['lng', 'lat', 'frc_supply', 'Grid_ID'])
+        for k, v in hash.items():
+            g = grids[grids.Grid_ID==k]
+            a = {
+                'lng': g.long.values[0],
+                'lat': g.lat.values[0],
+                'frc_supply': len(v),
+                'Grid_ID': k
+            }
+            allocation = allocation.append(a, ignore_index=True)
+        print(allocation)
+        allocation.to_csv(outfile, index=False)
+
+        return hash
 
     except:
         print('Model not solved :(')
         print(mdl.get_solve_details())
+
+        return None
 
 if __name__ == "__main__":
     nargs = len(sys.argv)
@@ -267,19 +298,17 @@ if __name__ == "__main__":
 
     DATA_DIR = sys.argv[1]
     DATA_FILES = os.listdir(DATA_DIR)
-    GRIDS_PATH = 'grid_spec.csv'
-
+    NUM_FILES = len(DATA_FILES)
     radius = float(sys.argv[2])
 
-    random_state = 6
-
     print("Loading grid specs...")
-    grids = pd.read_csv(GRIDS_PATH)
+    grids = pd.read_csv('grid_spec.csv')
     print("Loading distance matrix...")
+    # distances = compute_distances()
     distances = pd.read_csv('distances.csv')
 
     print("Computing adjacency matrix...")
-    adj_mat = compute_adj_mat(radius)
+    adj_mat = compute_adj_mat(distances, radius)
 
     print("Solving minimum bases required...")
     base_list = find_min_bases(adj_mat)
@@ -296,18 +325,18 @@ if __name__ == "__main__":
     try:
         day = int(day)
         print("Loading day %d data..." % day)
-        df = load_dataset(day) # Load specific day
+        df = load_dataset(DATA_DIR, NUM_FILES, grids, regions, distances, day) # Load specific day
     except ValueError:
         print("Loading all incidences...")
-        df = load_dataset() # Load all data
+        df = load_dataset(DATA_DIR, NUM_FILES, grids, regions, distances) # Load all data
         day = sys.argv[3]
         print("Getting incidences for %s day..." % day)
         if day == "worst":
-            worst_days = find_worst_day_by_grid(df)
+            worst_days = find_worst_day_by_grid(df, grids)
             # print(worst_days)
-            df = get_worst_day_incidences(df, worst_days)
+            df = get_worst_day_incidences(df, grids, worst_days)
         elif day == "average":
-            df = find_average_incidences_by_grid(df)
+            df = find_average_incidences_by_grid(NUM_FILES, df, grids)
 
     # print(df)
 
@@ -316,6 +345,10 @@ if __name__ == "__main__":
     # print(clashes)
 
     print("Solving...")
-    allocate(df.spf_base, clashes)
+    if nargs == 5:
+        num_cars = int(sys.argv[4])
+        allocate(grids, df.spf_base, clashes, num_cars)
+    else:
+        allocate(grids, df.spf_base, clashes)
 
     print("Time taken:", time.time() - t0)
