@@ -124,17 +124,35 @@ def optimize(data_dir, radius, num_cars, outfile, multi_method = None, time_vary
             df = df[df.day==mode]
         elif multi_method == "aggregated":
             df = wd_incidences
-    
-    print("Finding overlaps in incidence times...")
-    clashes = solve.find_clashes(df)
 
-    print("Solving...")
-    allocation = solve.allocate(grids, df.spf_base, clashes, num_cars, outfile)
+    if time_varying != None:
+        print("X-factor")
+        for index, row in df.iterrows():
+            if row.start_time < 480:
+                df.at[index,'window'] = "00-08"
+            elif row.start_time < 960:
+                df.at[index,'window'] = "08-16"
+            elif row.start_time <= 1440:
+                df.at[index,'window'] = "16-24"
+        
+        intervals = ['00-08', '08-16', '16-24']
+        for i in intervals:
+            print("Finding overlaps in incidence times during %s..." % i)
+            clashes = solve.find_clashes(df[df.window==i])
+            print(clashes)
+            outfile = os.path.join(UPLOAD_FOLDER, '%s_sol.csv' % i)
+            print("Solving for interval %s..." % i)
+            allocation = solve.allocate(grids, df.spf_base, clashes, num_cars, outfile)
+    else:
+        print("Finding overlaps in incidence times...")
+        clashes = solve.find_clashes(df)
 
-    print("Time taken:", time.time() - t0)
+        print("Solving...")
+        allocation = solve.allocate(grids, df.spf_base, clashes, num_cars, outfile)
+
+        print("Time taken:", time.time() - t0)
 
     return redirect(url_for('allocation_file', filename='sol.csv'))
-
 
 @app.route('/solution', methods=['GET'])
 def plot_map():
