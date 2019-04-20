@@ -14,8 +14,9 @@ import solve
 import evaluate
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'io')
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+if os.path.exists(UPLOAD_FOLDER):
+    os.rmdir(UPLOAD_FOLDER)
+os.makedirs(UPLOAD_FOLDER)
 ALLOWED_EXTENSIONS = set(['zip'])
 ALLOWED_EXTENSIONS_2 = set(['csv'])
 
