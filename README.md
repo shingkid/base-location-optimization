@@ -3,6 +3,8 @@ This project aims to recommend effective deployment locations for police emergen
 
 Of the teams which tackled this law enforcement vehicle location problem in the IS421 Enterprise Analytics for Decision Support course, we were awarded Best Performing Team for achieving the lowest risks for both normal and high demand evaluation cases.
 
+We provide Python scripts for quick execution from the command line, while the interim SmartDeploy web application is hosted at https://smart-deploy.herokuapp.com. 
+
 ## Getting Started
 
 ### Prerequisites
@@ -17,34 +19,26 @@ pip install -r requirements.txt
 ```
 
 ## Running
-Default 15 cars
+Default 15 cars:
 
 `python solve.py [data_dir] [radius] [day]`
 
-Optional flag to specify number of cars available for deployment
+Optional flag to specify number of cars available for deployment:
 
 `python solve.py [data_dir] [radius] [day] [num_cars]`
 
 ### Evaluation
 Official Submission Portal: https://ucp.unicen.smu.edu.sg/gv/students/evaluate/
 
-Internal script:
+Internal script: `python evaluate.py [data_file] [solution_file]`
 
-`python evaluate.py [data_file] [solution_file]`
-
-## Work-in-Progress
-Web Application
-- [x] Client-side validation for zip file, radius, and number of cars
-- [x] Change tab
-- [x] Unzip and load csv files
-- [ ] Output solution based on data in csv format
-- [x] Display incidences and base stations on map
-- [ ] Deploy to cloud
-- [ ] Evaluation function
+## To-do
+- [ ] Cloud deployment fix
+- [ ] UI Improvements
 
 ## Acknowledgements
 Team: Patrick Lim, Jane Seah, Koh Zhi Rong, Tan Kim Chye, and Sim Li Jin
 
 Supervisor: Professor Lau Hoong Chuin, School of Information Systems, Singapore Management University
 
-Sponsor(s): Dr Jonathan Chase, Fujitsu-SMU Urban Computing and Engineering (UNiCEN) Corp. Lab
+Sponsor: Dr Jonathan Chase, Fujitsu-SMU Urban Computing and Engineering (UNiCEN) Corp. Lab
