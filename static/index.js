@@ -1,6 +1,11 @@
-const accessToken = '';
+const accessToken = 'pk.eyJ1Ijoic211dGVycmEiLCJhIjoiY2puanI1NnhxMG1vODNwcjE4emFvejBoYyJ9.DsUY0WB1_Y-E2TPAleZGuw';
 
 $(document).ready(function() {
+    getMap()
+    getResult() 
+})
+
+function getMap() {
   var mymap = L.map('mapid').setView([1.391667, 103.894444], 13);
 
   L.tileLayer(`https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=${accessToken}`, {
@@ -16,4 +21,18 @@ $(document).ready(function() {
       marker.bindPopup(`${a.frc_supply} car(s)`);
     });
   })
-})
+}
+
+function getResult() {
+    $.getJSON('/getResult', function(data){
+        var results = $("#results")
+        $.each(data, function(key, val){
+            var num = val['risk'] * 100
+            results.append(val['filename'] + '  Risk: ' + Math.round(num * 100) / 100);
+        })
+    
+        
+
+    });
+    
+}

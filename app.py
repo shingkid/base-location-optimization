@@ -11,6 +11,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 import solve
+import evaluate
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'io')
 if not os.path.exists(UPLOAD_FOLDER):
@@ -69,6 +70,7 @@ def upload_file():
             if num_cars == '':
                 num_cars = 15
             optimize(DATA_DIR, radius, int(num_cars), outfile, time_varying = time_varying, day = day)
+            evaluator(filename)
             
         elif file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -133,7 +135,7 @@ def optimize(data_dir, radius, num_cars, outfile, multi_method = None, time_vary
 
     print("Time taken:", time.time() - t0)
 
-    return redirect(url_for('allocation_file', filename='sol.csv'))
+    # return redirect(url_for('allocation_file', filename='sol.csv'))
 
 
 @app.route('/solution', methods=['GET'])
@@ -156,7 +158,48 @@ def allocation_file(filename):
         return send_file('io/' + filename, as_attachment=True)
     except:
         return make_response(jsonify({'error': 'Not found'}), 404)
-                    
+
+def evaluator(filename):
+    
+    df = pd.read_csv(os.path.join(UPLOAD_FOLDER, filename), index_col='id').sort_values(by=['start_time'])
+    allocation = pd.read_csv(os.path.join(UPLOAD_FOLDER, 'sol.csv'))
+
+    supply = {int(row.Grid_ID): [0]*int(row.frc_supply) for index, row in allocation.iterrows()}
+    grids = pd.read_csv('grid_spec.csv')
+    
+    for index, row in df.iterrows():
+        gid = int(grids[grids.long==row.lng][grids.lat==row.lat].Grid_ID.values[0])
+        df.at[index, 'Grid_ID'] = gid
+
+    success = evaluate.assign_cars(df, supply)
+    risk = (len(df) - success) / len(df)
+
+    print("Risk: {0:.2f}%".format(risk * 100))
+    result = pd.DataFrame(columns=['filename', 'risk'])
+    # for k, v in hash.items():
+        # g = grids[grids.Grid_ID==k]
+        # a = {
+            # 'lng': g.long.values[0],
+            # 'lat': g.lat.values[0],
+            # 'frc_supply': len(v),
+            # 'Grid_ID': k
+        # }
+    a = {'filename': filename, 'risk': risk}
+    result = result.append(a, ignore_index=True)
+    outputFolder = os.path.join(UPLOAD_FOLDER, 'results.csv')
+    result.to_csv(outputFolder, index=False)
+ 
+@app.route('/getResult', methods=['GET']) 
+def getResult():
+    results = pd.read_csv(os.path.join(UPLOAD_FOLDER, 'results.csv'))
+    data = []
+    for index, row in results.iterrows():
+        result = {
+            'filename': row.filename,
+            'risk': row.risk,
+        }
+        data.append(result)
+    return jsonify(data)
 
 @app.errorhandler(404)
 def not_found(error):
