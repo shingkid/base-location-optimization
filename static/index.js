@@ -2,7 +2,10 @@ const accessToken = 'pk.eyJ1Ijoic211dGVycmEiLCJhIjoiY2puanI1NnhxMG1vODNwcjE4emFv
 
 $(document).ready(function() {
     getMap()
-    getResult() 
+    getResult()
+
+    setInterval(getMap, 1000);
+    setInterval(getResult, 1000);
 })
 
 function getMap() {
@@ -25,12 +28,12 @@ function getMap() {
 
 function getResult() {
     $.getJSON('/getResult', function(data){
-        var results = $("#results")
+        $("#results").empty()
         $.each(data, function(key, val){
-            var num = val['risk'] * 100
-            results.append(val['filename'] + '  Risk: ' + Math.round(num * 100) / 100);
+            var num = val['risk'] * 100;
+            $("#results").append(val['filename'] + '  Risk: ' + Math.round(num * 100) / 100 + '<br>');
+        
         })
-    
         
 
     });

@@ -89,7 +89,7 @@ def upload_file():
             if num_cars == '':
                 num_cars = 15
             optimize(DATA_DIR, radius, int(num_cars), outfile, multi_method = multi_method, time_varying = time_varying)
-                
+            evaluator(filename, data_dir = DATA_DIR)
     # return render_template('index.html')
     return redirect(url_for('allocation_file', filename='sol.csv'))
 
@@ -126,33 +126,33 @@ def optimize(data_dir, radius, num_cars, outfile, multi_method = None, time_vary
             df = df[df.day==mode]
         elif multi_method == "aggregated":
             df = wd_incidences
-
-    if time_varying != None:
-        print("X-factor")
-        for index, row in df.iterrows():
-            if row.start_time < 480:
-                df.at[index,'window'] = "00-08"
-            elif row.start_time < 960:
-                df.at[index,'window'] = "08-16"
-            elif row.start_time <= 1440:
-                df.at[index,'window'] = "16-24"
-        
-        intervals = ['00-08', '08-16', '16-24']
-        for i in intervals:
-            print("Finding overlaps in incidence times during %s..." % i)
-            clashes = solve.find_clashes(df[df.window==i])
-            print(clashes)
-            outfile = os.path.join(UPLOAD_FOLDER, '%s_sol.csv' % i)
-            print("Solving for interval %s..." % i)
-            allocation = solve.allocate(grids, df[df.window==i].spf_base, clashes, num_cars, outfile)
     else:
-        print("Finding overlaps in incidence times...")
-        clashes = solve.find_clashes(df)
+        if time_varying != None:
+            print("X-factor")
+            for index, row in df.iterrows():
+                if row.start_time < 480:
+                    df.at[index,'window'] = "00-08"
+                elif row.start_time < 960:
+                    df.at[index,'window'] = "08-16"
+                elif row.start_time <= 1440:
+                    df.at[index,'window'] = "16-24"
+            
+            intervals = ['00-08', '08-16', '16-24']
+            for i in intervals:
+                print("Finding overlaps in incidence times during %s..." % i)
+                clashes = solve.find_clashes(df[df.window==i])
+                print(clashes)
+                outfile = os.path.join(UPLOAD_FOLDER, '%s_sol.csv' % i)
+                print("Solving for interval %s..." % i)
+                allocation = solve.allocate(grids, df[df.window==i].spf_base, clashes, num_cars, outfile)
+        else:
+            print("Finding overlaps in incidence times...")
+            clashes = solve.find_clashes(df)
 
-        print("Solving...")
-        allocation = solve.allocate(grids, df.spf_base, clashes, num_cars, outfile)
+            print("Solving...")
+            allocation = solve.allocate(grids, df.spf_base, clashes, num_cars, outfile)
 
-        print("Time taken:", time.time() - t0)
+            print("Time taken:", time.time() - t0)
 
     # return redirect(url_for('allocation_file', filename='sol.csv'))
 
@@ -177,33 +177,45 @@ def allocation_file(filename):
     except:
         return make_response(jsonify({'error': 'Not found'}), 404)
 
-def evaluator(filename):
-    
-    df = pd.read_csv(os.path.join(UPLOAD_FOLDER, filename), index_col='id').sort_values(by=['start_time'])
-    allocation = pd.read_csv(os.path.join(UPLOAD_FOLDER, 'sol.csv'))
-
-    supply = {int(row.Grid_ID): [0]*int(row.frc_supply) for index, row in allocation.iterrows()}
-    grids = pd.read_csv('grid_spec.csv')
-    
-    for index, row in df.iterrows():
-        gid = int(grids[grids.long==row.lng][grids.lat==row.lat].Grid_ID.values[0])
-        df.at[index, 'Grid_ID'] = gid
-
-    success = evaluate.assign_cars(df, supply)
-    risk = (len(df) - success) / len(df)
-
-    print("Risk: {0:.2f}%".format(risk * 100))
+def evaluator(filename, data_dir = None):
     result = pd.DataFrame(columns=['filename', 'risk'])
-    # for k, v in hash.items():
-        # g = grids[grids.Grid_ID==k]
-        # a = {
-            # 'lng': g.long.values[0],
-            # 'lat': g.lat.values[0],
-            # 'frc_supply': len(v),
-            # 'Grid_ID': k
-        # }
-    a = {'filename': filename, 'risk': risk}
-    result = result.append(a, ignore_index=True)
+    if data_dir != None:
+        data_files = os.listdir(data_dir)
+        for i in range(len(data_files)):
+            filename = os.path.join(data_dir, 'full_sample_%d_for_students.csv' % i)
+            df = pd.read_csv(filename, index_col='id')
+            allocation = pd.read_csv(os.path.join(UPLOAD_FOLDER, 'sol.csv'))
+            supply = {int(row.Grid_ID): [0]*int(row.frc_supply) for index, row in allocation.iterrows()}
+            grids = pd.read_csv('grid_spec.csv')
+            
+            for index, row in df.iterrows():
+                gid = int(grids[grids.long==row.lng][grids.lat==row.lat].Grid_ID.values[0])
+                df.at[index, 'Grid_ID'] = gid
+
+            success = evaluate.assign_cars(df, supply)
+            risk = (len(df) - success) / len(df)
+
+            print("Risk: {0:.2f}%".format(risk * 100))
+            a = {'filename': 'full_sample_%d_for_students.csv' % i, 'risk': risk}
+            result = result.append(a, ignore_index=True)
+    else:   
+        df = pd.read_csv(os.path.join(UPLOAD_FOLDER, filename), index_col='id').sort_values(by=['start_time'])
+        allocation = pd.read_csv(os.path.join(UPLOAD_FOLDER, 'sol.csv'))
+
+        supply = {int(row.Grid_ID): [0]*int(row.frc_supply) for index, row in allocation.iterrows()}
+        grids = pd.read_csv('grid_spec.csv')
+        
+        for index, row in df.iterrows():
+            gid = int(grids[grids.long==row.lng][grids.lat==row.lat].Grid_ID.values[0])
+            df.at[index, 'Grid_ID'] = gid
+
+        success = evaluate.assign_cars(df, supply)
+        risk = (len(df) - success) / len(df)
+
+        print("Risk: {0:.2f}%".format(risk * 100))
+        a = {'filename': filename, 'risk': risk}
+        result = result.append(a, ignore_index=True)
+        
     outputFolder = os.path.join(UPLOAD_FOLDER, 'results.csv')
     result.to_csv(outputFolder, index=False)
  
