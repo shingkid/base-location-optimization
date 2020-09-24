@@ -5,12 +5,12 @@ cplex==12.8.0.1
 docloud==1.0.369
 docplex==2.9.141
 Flask==1.0.2
-Flask-Cors==3.0.7
+Flask-Cors==3.0.9
 idna==2.8
 itsdangerous==1.1.0
 Jinja2==2.10.1
 MarkupSafe==1.1.1
-numpy==1.16.2
+numpy==1.16.3
 pandas==0.24.2
 pprint==0.1
 python-dateutil==2.8.0
@@ -18,5 +18,5 @@ pytz==2019.1
 requests==2.21.0
 six==1.12.0
 tqdm==4.31.1
-urllib3==1.24.2
+urllib3==1.24.3
 Werkzeug==0.15.3
