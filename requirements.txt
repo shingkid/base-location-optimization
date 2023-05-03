@@ -4,7 +4,7 @@ Click==7.0
 cplex==12.8.0.1
 docloud==1.0.369
 docplex==2.9.141
-Flask==1.0.2
+Flask==2.2.5
 Flask-Cors==3.0.9
 idna==2.8
 itsdangerous==1.1.0
