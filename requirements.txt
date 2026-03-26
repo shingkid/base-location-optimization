@@ -5,7 +5,7 @@ cplex==12.8.0.1
 docloud==1.0.369
 docplex==2.9.141
 Flask==2.3.2
-Flask-Cors==3.0.9
+Flask-Cors==6.0.0
 idna==3.7
 itsdangerous==1.1.0
 Jinja2==3.1.6
