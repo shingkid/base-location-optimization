@@ -6,7 +6,7 @@ docloud==1.0.369
 docplex==2.9.141
 Flask==3.1.3
 Flask-Cors==6.0.0
-idna==3.7
+idna==3.15
 itsdangerous==1.1.0
 Jinja2==3.1.6
 MarkupSafe==1.1.1
